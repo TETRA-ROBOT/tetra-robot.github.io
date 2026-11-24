@@ -2,22 +2,24 @@
  * 처음 상태: 로봇 4대(모델이 서로 다름), 지난 7일 미션·알림 기록, 그룹, 자주 쓰는 미션, 반복 예약, 조작 이력.
  */
 import { buildMissionPlan, type Poi } from '@fleet-api/lib/mission-plan';
+import { ROBOTS } from '../../shared/world';
 import { alerts, audit, groups, iso, missions, newRobot, nextId, poiByName, pois, presets, robots, schedules, SITE_ID, MAP_ID, type MissionRow } from './state';
 
 const DAY = 86_400_000;
 
 export function seed() {
-  const c1 = poiByName('충전소 1');
-  robots.push(
-    newRobot({ name: 'TETRA-M 01', model: 'TETRA-M', x: c1.x, y: c1.y, yaw: c1.yaw ?? 0, battery: 71 }),
-    newRobot({ name: 'TETRA-H 02', model: 'TETRA-H', x: 25.6, y: 21.3, yaw: -Math.PI / 2, battery: 88 }),
-    newRobot({ name: 'TETRA-S 03', model: 'TETRA-S', x: 4.5, y: 10.8, yaw: 0, battery: 64 }),
-    newRobot({ name: 'TETRA-MH 04', model: 'TETRA-MH', x: 20.5, y: 11.2, yaw: Math.PI, battery: 34 }),
-  );
-  // 1호기는 충전기에 붙어 있다
-  robots[0].docking = 1;
-  robots[0].nav_state = 'charging';
-  robots[0].charger_id = c1.id;
+  // 로봇 명단·처음 자리는 싱글관제 데모와 같은 현장 정의(shared/world.ts)를 쓴다
+  for (const r of ROBOTS) {
+    // id 는 newRobot 이 차례로 매긴다 (나중에 더하는 로봇과 겹치지 않게). 명단 번호와 어긋나면 탭 동기화가 엉뚱한 로봇을 따라간다
+    const robot = newRobot({ name: r.name, model: r.model, x: r.start.x, y: r.start.y, yaw: r.start.yaw, battery: r.battery });
+    if (robot.id !== r.id) throw new Error(`[demo] 로봇 번호가 명단과 다릅니다: ${r.name} ${robot.id} ≠ ${r.id}`);
+    robots.push(robot);
+    if (r.dockedAt) {
+      robot.docking = 1;
+      robot.nav_state = 'charging';
+      robot.charger_id = poiByName(r.dockedAt).id;
+    }
+  }
 
   groups.push(
     { id: nextId('group'), name: '창고 운반조', color: '#34b79b', charge_threshold: null, charge_resume: null, created_by: 'demo', robot_ids: [1, 2, 4] },

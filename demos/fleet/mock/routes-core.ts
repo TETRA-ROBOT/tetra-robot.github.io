@@ -100,7 +100,16 @@ post('/api/fleet/robots/:id/localize', ({ params, body }) => {
 get('/api/fleet/robots/:id/camera', () => ({ available: false }));
 get('/api/fleet/robots/:id/ping', ({ params }) => ({ ok: true, reachable: true, latency_ms: 3, robot_id: num(params.id) }));
 get('/api/fleet/robots/:id/wifi', () => demoOnly('로봇 와이파이'));
-post('/api/fleet/robots/:id/single-console', () => demoOnly('로봇 화면 열기'));
+// 로봇 화면 열기: 실제 관제는 /single/<ID>/ 로 로봇 화면을 중계한다. 데모는 같은 사이트의 싱글관제 데모를 그 로봇으로 연다.
+// 화면이 빈 창에 이 주소를 넣으므로 절대 주소로 준다. 싱글관제는 해시 주소를 쓰므로 쿼리는 # 앞에 둔다 (어느 하위 경로에서도 맞게 지금 주소 기준)
+post('/api/fleet/robots/:id/single-console', ({ params }) => {
+  const r = robotOf(params.id);
+  if (r.is_virtual) throw new HttpError(409, '가상 로봇에는 로봇 화면이 없습니다.');
+  const url = new URL(`../single/?robot=${r.id}`, window.location.href);
+  url.hash = '';
+  audit('SINGLE_CONSOLE_OPEN', { robot_id: r.id, target_type: 'ROBOT', target_id: String(r.id), detail: { name: r.name, ip: r.ip_address } });
+  return { success: true, url: url.href };
+});
 post('/api/fleet/robots/scan', () => ({ robots: [], scanned: 0 }));
 
 /** 배터리 그래프: 지난 시간은 그럴듯하게 만들어 내고, 끝은 지금 값 */

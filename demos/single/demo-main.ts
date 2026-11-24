@@ -5,7 +5,9 @@
 import './shims/process-global';
 import { installMockBackend } from './mock-backend';
 import { mountDemoBanner } from './banner';
+import { onMirrorChange, pickRobot } from './world';
 
 installMockBackend();
-mountDemoBanner();
+const setMirroring = mountDemoBanner(pickRobot().name);
+onMirrorChange((robot) => setMirroring(!!robot));
 import('@/main');

@@ -7,44 +7,14 @@
  *   node scripts/smoke_test.cjs [--only single|fleet] [--shots <폴더>]
  * Playwright 가 필요하다 (CI: npm ci && npx playwright install --with-deps chromium).
  */
-const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('playwright');
+const { serve, login, BASE_PATH } = require('./lib/demo_server.cjs');
 
-const SITE = path.resolve(__dirname, '../site');
-const BASE_PATH = '/x/y/'; // 사이트 맨 위가 아니어도 열리는지 함께 본다
 const args = process.argv.slice(2);
 const only = args.includes('--only') ? args[args.indexOf('--only') + 1] : null;
 const shots = args.includes('--shots') ? args[args.indexOf('--shots') + 1] : null;
-
-const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png',
-  '.json': 'application/json', '.ico': 'image/x-icon', '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf', '.stl': 'model/stl',
-  '.mpeg': 'audio/mpeg', '.mp3': 'audio/mpeg', '.mp4': 'video/mp4', '.wasm': 'application/wasm' };
-
-function serve() {
-  const server = http.createServer((req, res) => {
-    const url = decodeURIComponent(req.url.split('?')[0]);
-    if (!url.startsWith(BASE_PATH)) { res.writeHead(404).end(); return; }
-    let file = path.join(SITE, url.slice(BASE_PATH.length));
-    if (!file.startsWith(SITE)) { res.writeHead(403).end(); return; }
-    if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
-    if (!fs.existsSync(file)) { res.writeHead(404).end(); return; }
-    res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
-    fs.createReadStream(file).pipe(res);
-  });
-  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server)));
-}
-
-/** 보이는 입력 칸을 채우고 비밀번호 칸에서 Enter (두 화면 모두 아무 계정이나 통과) */
-async function login(page) {
-  const password = page.locator('input[type="password"]:visible').first();
-  await password.waitFor({ timeout: 20000 });
-  const textInputs = page.locator('input[type="text"]:visible, input:not([type]):visible');
-  for (let i = 0; i < await textInputs.count(); i++) await textInputs.nth(i).fill('demo');
-  await password.fill('demo1234!');
-  await password.press('Enter');
-}
 
 const CASES = [
   {
@@ -57,6 +27,14 @@ const CASES = [
       await login(page);
       await page.waitForFunction(() => !location.hash.includes('login'), null, { timeout: 20000 });
       await page.getByText('비상정지').first().waitFor({ timeout: 20000 });
+      // 원본 목업(사무실 지도, 원을 도는 로봇)이 아니라 멀티관제와 같은 창고 현장으로 바꿔 끼워졌는지 (demos/single/world)
+      const world = await page.evaluate(async () => {
+        const json = (p) => fetch(p).then((r) => r.json());
+        const [nav, map, locations] = await Promise.all([json('/nav'), json('/map'), json('/location')]);
+        return { x: nav.translation.x, y: nav.translation.y, width: map.info.width, names: locations.map((l) => l.location_name) };
+      });
+      if (world.width !== 800 || !world.names.includes('충전소 1') || !world.names.includes('출고장 1')) throw new Error(`창고 지도·장소가 아님: ${JSON.stringify({ width: world.width, names: world.names })}`);
+      if (!(world.x > 1 && world.x < 39 && world.y > 1 && world.y < 23)) throw new Error(`로봇이 창고 안에 있지 않음: (${world.x}, ${world.y})`);
     },
   },
   {

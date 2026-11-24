@@ -107,6 +107,9 @@ if [ ${#RESULT[@]} -eq 0 ]; then echo "바뀐 원본이 없습니다."; exit 0; 
 
 if [ "$RUN_TEST" = 1 ]; then
   node "$ROOT/scripts/smoke_test.cjs" ${ONLY:+--only "$ONLY"}
+  # 두 데모가 같은 창고 현장을 쓰므로 한쪽만 다시 빌드해도 둘 다 본다 (지도 이름표 겹침, 로봇 화면 열기·따라 하기)
+  node "$ROOT/scripts/label_overlap_check.cjs"
+  node "$ROOT/scripts/fleet_single_sync_check.cjs"
 fi
 
 # 이번에 빌드한 것만 바꾸고 나머지 기록은 그대로 둔다

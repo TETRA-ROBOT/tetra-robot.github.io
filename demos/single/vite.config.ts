@@ -8,6 +8,7 @@ import vuetify from 'vite-plugin-vuetify';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { checkAislesFree } from '../shared/aisles';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const UI_DIR = path.resolve(process.env.SINGLE_UI_DIR || path.join(HERE, '../../.upstream/single/tetra-single-ui'));
@@ -15,6 +16,10 @@ const API_SRC = path.resolve(UI_DIR, '../tetra-single-api/src');
 const MOCK_DIR = path.join(UI_DIR, 'mock');
 const OUT_DIR = path.resolve(process.env.SINGLE_OUT_DIR || path.join(HERE, '../../site/single'));
 const SHIMS = path.join(HERE, 'shims');
+
+// 데모 로봇이 따라가는 창고 통로가 선반·벽을 뚫지 않는지 빌드할 때 확인한다 (지도나 장소를 옮기다 어긋나면 여기서 멈춘다)
+const blockedAisles = checkAislesFree();
+if (blockedAisles.length) throw new Error(`[single-demo] 통로 그래프가 벽·선반에 닿습니다: ${blockedAisles.join(', ')}`);
 
 /** 원본 vite.config.ts 의 backendRoutes 를 그대로 읽어 목업이 받을 경로를 맞춘다 */
 function readBackendRoutes(): string[] {

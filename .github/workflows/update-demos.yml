@@ -63,7 +63,10 @@ jobs:
           bash scripts/update_demos.sh "${args[@]}"
       - name: 실패하면 화면 캡처 남기기
         if: failure() && steps.token.outputs.ok == 'true'
-        run: node scripts/smoke_test.cjs --shots smoke-shots || true
+        run: |
+          node scripts/smoke_test.cjs --shots smoke-shots || true
+          node scripts/label_overlap_check.cjs --shots smoke-shots || true
+          node scripts/fleet_single_sync_check.cjs --shots smoke-shots || true
       - uses: actions/upload-artifact@v7
         if: failure() && steps.token.outputs.ok == 'true'
         with:

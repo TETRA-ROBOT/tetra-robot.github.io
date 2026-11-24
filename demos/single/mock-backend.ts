@@ -8,6 +8,7 @@
 import axios, { AxiosError, AxiosHeaders, type AxiosAdapter, type InternalAxiosRequestConfig } from 'axios';
 import { handleMockRequest, type MockResponse } from '@mock/routes';
 import { attachMockSocket } from '@mock/socket';
+import { installWorld, observeRequest, overrideRequest, pickRobot } from './world';
 
 declare const __DEMO_BACKEND_ROUTES__: string[];
 const BACKEND_ROUTES: string[] = __DEMO_BACKEND_ROUTES__;
@@ -46,7 +47,10 @@ function parseBody(data: unknown, contentType: string): Record<string, any> {
 
 function call(method: string, url: URL, body: Record<string, any>): MockResponse {
   try {
-    return handleMockRequest({ method: method.toUpperCase(), path: url.pathname, query: Object.fromEntries(url.searchParams), body });
+    const request = { method: method.toUpperCase(), path: url.pathname, query: Object.fromEntries(url.searchParams), body };
+    // 같은 현장(창고) 데모: 지도 격자는 원본보다 먼저 답하고, 이동·취소는 데모 로봇에도 알린다 (world/)
+    observeRequest(request.method, request.path);
+    return overrideRequest(request.method, request.path, () => handleMockRequest(request)) ?? handleMockRequest(request);
   } catch (error) {
     console.error('[demo mock] handler failed', method, url.pathname, error);
     return { status: 500, body: { success: false, message: String(error) } };
@@ -175,8 +179,11 @@ export function installMockBackend(): void {
   const fallback = axios.getAdapter(axios.defaults.adapter ?? ['xhr', 'fetch']);
   axios.defaults.adapter = mockAdapter(fallback);
   patchDom();
+  // 원본 목업 데이터를 멀티관제 데모와 같은 창고 현장으로 바꾼 뒤 소켓을 붙인다 (소켓이 붙을 때 상태 추적 기록을 채운다)
+  const reseedLogs = installWorld(pickRobot());
   // mock/socket.ts 는 HTTP 서버를 받지만 가짜 서버는 쓰지 않는다
   attachMockSocket({} as never);
+  reseedLogs();
   // PWA 서비스 워커(/sw.js)는 데모에서 등록하지 않는다 (사이트 루트에 걸리면 다른 페이지까지 영향)
   if ('serviceWorker' in navigator) {
     try {

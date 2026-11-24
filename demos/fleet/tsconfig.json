@@ -17,6 +17,6 @@
       "axios": ["../../.upstream/fleet/tetra-fleet-ui/node_modules/axios/index.d.ts"]
     }
   },
-  "include": ["*.ts", "mock/*.ts", "shims/*.ts"],
+  "include": ["*.ts", "mock/*.ts", "shims/*.ts", "../shared/*.ts"],
   "exclude": ["vite.config.ts"]
 }

@@ -14,6 +14,7 @@ import './routes-missions';
 import './routes-maps';
 import './routes-admin';
 import { allRobotViews } from './views';
+import { startFleetSync } from './sync';
 
 let started = false;
 
@@ -34,5 +35,6 @@ export function startMockServer() {
     demoWork();
   };
   startEngine();
+  startFleetSync();
   requestSnapshot();
 }

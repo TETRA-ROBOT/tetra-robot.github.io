@@ -8,6 +8,7 @@ import { hub } from './hub';
 import { audit, DEMO_USER, floorPng, iso, maps, mapView, nextId, pois, robots, spaces, SITE_ID, MAP_ID, type PoiRow } from './state';
 import { poiView, siteView, spaceView } from './views';
 import { POI_TYPES } from '@fleet-api/lib/poi-model';
+import { ZONES } from '../../shared/world';
 
 // ------------------------------------------------------------------ 사이트·구역
 
@@ -116,9 +117,14 @@ del('/api/fleet/locations/:id', ({ params }) => {
 post('/api/fleet/locations/import', () => demoOnly('로봇 장소 가져오기'));
 post('/api/fleet/locations/send', () => demoOnly('로봇에 장소 보내기'));
 
-// ------------------------------------------------------------------ 교통 구역·설비 (데모에는 없음)
+// ------------------------------------------------------------------ 교통 구역 (현장 구역은 보이기만, 움직임에는 반영 안 함)·설비 (데모에는 없음)
 
-const zones: Array<Record<string, any> & { id: number; map_id: number }> = [];
+const zones: Array<Record<string, any> & { id: number; map_id: number }> = ZONES.map((z) => ({
+  id: nextId('zone'), site_id: SITE_ID, map_id: MAP_ID, name: z.name,
+  // 싱글관제 가상벽(진입 금지) = 관제 RESTRICTED
+  type: z.kind === 'NO_ENTRY' ? 'RESTRICTED' : 'SPEED_LIMIT',
+  polygon: z.polygon.map((p) => [p.x, p.y]), capacity: 1, speed_limit: z.speed, params: {}, vda_only: false, enabled: true, supported: true,
+}));
 const zoneView = (z: (typeof zones)[number]) => ({ ...z, inside: [], granted: [], waiting: [] });
 get('/api/fleet/traffic/zones', ({ query }) => zones.filter((z) => !query.map_id || z.map_id === Number(query.map_id)).map(zoneView));
 post('/api/fleet/traffic/zones', ({ body }) => {

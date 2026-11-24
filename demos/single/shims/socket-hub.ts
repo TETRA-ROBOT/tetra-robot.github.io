@@ -49,7 +49,10 @@ export class ServerSocket extends Emitter {
   }
   emit(event: string, ...args: any[]): boolean {
     if (!this.connected) return false;
-    const payload = clone(args);
+    // 데모 현장(world/)이 원본 목업이 보내는 값을 바꿔 끼운다 (null 이면 보내지 않는다)
+    const filtered = hub.outgoing ? hub.outgoing(event, args) : args;
+    if (!filtered) return true;
+    const payload = clone(filtered);
     later(() => this.client.receive(event, payload));
     return true;
   }
@@ -155,4 +158,7 @@ export class ClientSocket extends Emitter {
   offAny(): this { return this; }
 }
 
-export const hub: { server: FakeServer | null; waiting: ClientSocket[] } = { server: null, waiting: [] };
+/** 서버 → 화면 이벤트를 바꾸는 함수. 인자를 돌려주면 그 값을, null 이면 보내지 않는다 */
+export type OutgoingFilter = (event: string, args: any[]) => any[] | null;
+
+export const hub: { server: FakeServer | null; waiting: ClientSocket[]; outgoing: OutgoingFilter | null } = { server: null, waiting: [], outgoing: null };

@@ -5,7 +5,7 @@
 import { DEFAULT_SETTINGS, type FleetSettings } from '@fleet-api/lib/settings-schema';
 import type { MissionStep } from '@fleet-api/lib/mission-model';
 import { buildGrid, type Point, type SimGrid } from '@fleet-api/lib/virtual-robot';
-import { buildFloorPixels, HEIGHT, ORIGIN, RESOLUTION, WIDTH, pixelsToPng } from './floorplan';
+import { buildFloorPixels, HEIGHT, ORIGIN, PLACES, RESOLUTION, WIDTH, pixelsToPng } from '../../shared/world';
 
 export const iso = (t: number = Date.now()) => new Date(t).toISOString();
 const ids: Record<string, number> = {};
@@ -111,24 +111,10 @@ export interface PoiRow {
   robot_models: string[] | null;
 }
 
-const H = Math.PI / 2;
-const BASE_POIS: Array<Omit<PoiRow, 'id' | 'site_id' | 'map_id'>> = [
-  { name: '입고장 A', type: 'PICKUP', x: 2.6, y: 19.9, yaw: Math.PI, marker_id: null, robot_models: null },
-  { name: '입고장 B', type: 'PICKUP', x: 2.6, y: 3.1, yaw: Math.PI, marker_id: null, robot_models: null },
-  { name: '선반 A-1', type: 'WAYPOINT', x: 9, y: 7.25, yaw: H, marker_id: null, robot_models: null },
-  { name: '선반 A-2', type: 'WAYPOINT', x: 19.2, y: 7.25, yaw: H, marker_id: null, robot_models: null },
-  { name: '선반 B-1', type: 'WAYPOINT', x: 9, y: 11.25, yaw: H, marker_id: null, robot_models: null },
-  { name: '선반 B-2', type: 'WAYPOINT', x: 19.2, y: 15.25, yaw: H, marker_id: null, robot_models: null },
-  { name: '출고장 1', type: 'DROPOFF', x: 31.5, y: 7.7, yaw: H, marker_id: null, robot_models: null },
-  { name: '출고장 2', type: 'DROPOFF', x: 31.5, y: 10.4, yaw: -H, marker_id: null, robot_models: null },
-  { name: '사무실', type: 'DROPOFF', x: 36, y: 17, yaw: 0, marker_id: null, robot_models: null },
-  { name: '회의실', type: 'WAYPOINT', x: 30, y: 18.7, yaw: H, marker_id: null, robot_models: null },
-  { name: '충전소 1', type: 'CHARGER', x: 36.6, y: 2.0, yaw: -H, marker_id: 1, robot_models: null },
-  { name: '충전소 2', type: 'CHARGER', x: 38.2, y: 2.0, yaw: -H, marker_id: 2, robot_models: null },
-  { name: '충전소 3', type: 'CHARGER', x: 33.6, y: 2.0, yaw: -H, marker_id: 3, robot_models: null },
-  { name: '대기 장소 1', type: 'WAIT_ZONE', x: 25.6, y: 21.3, yaw: -H, marker_id: null, robot_models: null },
-  { name: '대기 장소 2', type: 'WAIT_ZONE', x: 25.6, y: 10.6, yaw: Math.PI, marker_id: null, robot_models: null },
-];
+// 장소는 싱글관제 데모와 같은 현장 정의(shared/world.ts)에서 가져온다
+const BASE_POIS: Array<Omit<PoiRow, 'id' | 'site_id' | 'map_id'>> = PLACES.map((p) => ({
+  name: p.name, type: p.type, x: p.x, y: p.y, yaw: p.yaw, marker_id: p.markerId, robot_models: null,
+}));
 
 export const pois: PoiRow[] = BASE_POIS.map((p) => ({ ...p, id: nextId('poi'), site_id: SITE_ID, map_id: MAP_ID }));
 export const poiByName = (name: string) => pois.find((p) => p.name === name && p.map_id === MAP_ID)!;
