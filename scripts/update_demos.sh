@@ -105,6 +105,9 @@ done
 
 if [ ${#RESULT[@]} -eq 0 ]; then echo "바뀐 원본이 없습니다."; exit 0; fi
 
+# 공개하면 안 되는 값(원본에 박힌 기본 비밀번호 등)이 빌드 결과에 남았으면 시험보다 먼저 멈춘다
+node "$ROOT/scripts/secret_scan.cjs"
+
 if [ "$RUN_TEST" = 1 ]; then
   node "$ROOT/scripts/smoke_test.cjs" ${ONLY:+--only "$ONLY"}
   # 두 데모가 같은 창고 현장을 쓰므로 한쪽만 다시 빌드해도 둘 다 본다 (지도 이름표 겹침, 로봇 화면 열기·따라 하기)

@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkAislesFree } from '../shared/aisles';
+import { redactSecrets } from '../shared/redact-plugin';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const UI_DIR = path.resolve(process.env.SINGLE_UI_DIR || path.join(HERE, '../../.upstream/single/tetra-single-ui'));
@@ -76,7 +77,7 @@ export default defineConfig({
   root: HERE,
   base: './',
   publicDir: false,
-  plugins: [demoNodeShims(), vue(), vuetify({ autoImport: true })],
+  plugins: [demoNodeShims(), vue(), vuetify({ autoImport: true }), redactSecrets()],
   resolve: {
     alias: [
       { find: /^socket\.io-client$/, replacement: path.join(SHIMS, 'socket.io-client.ts') },

@@ -23,6 +23,8 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: main # workflow_call 때도 방금 커밋한 최신 main 을 올린다
+      - name: 공개 금지 값 검사 (원본에 박힌 기본 비밀번호 등)
+        run: node scripts/secret_scan.cjs
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

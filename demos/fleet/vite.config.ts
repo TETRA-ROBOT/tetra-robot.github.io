@@ -9,6 +9,7 @@
  */
 import type { Plugin, UserConfig } from 'vite';
 import path from 'path';
+import { redactSecrets } from '../shared/redact-plugin';
 import { createRequire } from 'module';
 import { fileURLToPath, pathToFileURL } from 'url';
 
@@ -51,7 +52,7 @@ export default async (): Promise<UserConfig> => {
   root: here,
   base: './',
   publicDir: path.join(uiDir, 'public'),
-  plugins: [vue(), vuetify({ autoImport: true }), subPathFixes()],
+  plugins: [vue(), vuetify({ autoImport: true }), subPathFixes(), redactSecrets()],
   resolve: {
     alias: [
       { find: '@', replacement: path.join(uiDir, 'src') },

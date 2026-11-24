@@ -70,6 +70,10 @@ git add -A && git commit -m "데모 갱신" && git push
 cd site && python3 -m http.server 8000   # http://localhost:8000/
 ```
 
+## 공개하면 안 되는 값
+
+원본 화면 코드에는 로봇·관제의 공장 기본 비밀번호가 박혀 있습니다. 빌드할 때 `demos/shared/redact-plugin.ts` 가 이런 값을 `demo-password` 로 바꾸고, `scripts/secret_scan.cjs` 가 `site/` 에 남아 있으면 갱신·배포를 멈춥니다. 막을 값은 값이 아니라 SHA-256 해시로만 `scripts/lib/secrets.cjs` 에 둡니다(값을 적으면 그것이 또 공개되므로). 새 값을 막으려면 `printf '%s' '<값>' | sha256sum` 결과를 더하세요.
+
 ## 배포
 
 `main` 에 push 하면 `.github/workflows/pages.yml` 이 `site/` 를 GitHub Pages 로 올립니다(저장소 Settings → Pages → Source 를 **GitHub Actions** 로). 자동 갱신은 커밋 뒤 이 워크플로를 직접 부릅니다.

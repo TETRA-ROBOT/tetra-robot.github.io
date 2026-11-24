@@ -4,7 +4,7 @@
   "description": "TETRA 소개 페이지와 브라우저 데모. 이 package.json 은 확인 시험(scripts/smoke_test.cjs)에 쓰는 Playwright 만 둔다.",
   "scripts": {
     "update-demos": "bash scripts/update_demos.sh",
-    "test": "node scripts/smoke_test.cjs && node scripts/label_overlap_check.cjs && node scripts/fleet_single_sync_check.cjs"
+    "test": "node scripts/secret_scan.cjs && node scripts/smoke_test.cjs && node scripts/label_overlap_check.cjs && node scripts/fleet_single_sync_check.cjs"
   },
   "devDependencies": {
     "playwright": "1.63.0"
