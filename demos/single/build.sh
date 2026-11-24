@@ -20,5 +20,7 @@ fi
 
 cd "$HERE"
 "$SINGLE_UI_DIR/node_modules/.bin/vite" build --config "$HERE/vite.config.ts"
-cp "$SINGLE_UI_DIR/public/favicon.ico" "$SINGLE_OUT_DIR/favicon.ico"
+BRAND="$(cd "$HERE/../../site/assets" && pwd)"  # 사이트 공용 아이콘 (TETRA ROBOT 조직 아이콘)
+cp "$BRAND/../favicon.ico" "$SINGLE_OUT_DIR/favicon.ico"
+cp "$BRAND/favicon.svg" "$SINGLE_OUT_DIR/favicon.svg"
 echo "[single-demo] built into $(cd "$SINGLE_OUT_DIR" && pwd)"

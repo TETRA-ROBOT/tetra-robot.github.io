@@ -21,4 +21,8 @@ cd "$FLEET_UI_DIR"
 ./node_modules/.bin/vite build --config "$HERE/vite.config.ts"
 # 데모에는 필요 없는 파일 (서비스 워커·앱 설치 정보는 사이트 전체 범위를 건드린다)
 rm -f "$FLEET_OUT_DIR/sw.js" "$FLEET_OUT_DIR/manifest.webmanifest"
+BRAND="$(cd "$HERE/../../site/assets" && pwd)"  # 사이트 공용 아이콘 (TETRA ROBOT 조직 아이콘)
+# 화면 테마에 따라 favicon-dark/light 를 바꿔 끼우므로 둘 다 같은 아이콘으로 덮는다
+for theme in dark light; do cp "$BRAND/favicon.svg" "$FLEET_OUT_DIR/favicon-$theme.svg"; done
+cp "$BRAND/apple-touch-icon.png" "$FLEET_OUT_DIR/icons/apple-touch-icon.png"
 echo "[fleet] 완료: $FLEET_OUT_DIR"
