@@ -1,0 +1,16 @@
+{
+  "fleet": {
+    "repo": "https://github.com/TETRA-ROBOT/TetraFleetManagement",
+    "ref": "main",
+    "commit": "c598b314ec2658d3bbfc99e05923be83f25764a4",
+    "commit_date": "2026-11-24T12:22:28+09:00",
+    "built_at": "2026-11-24T03:33:40Z"
+  },
+  "single": {
+    "repo": "https://github.com/TETRA-ROBOT/TetraSingleManagement",
+    "ref": "v26.11.2",
+    "commit": "85503968b653d390ee88fde0f4e09c5bd9a46781",
+    "commit_date": "2026-11-23T17:09:27+09:00",
+    "built_at": "2026-11-24T03:33:40Z"
+  }
+}

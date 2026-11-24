@@ -10,7 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const UI_DIR = path.resolve(process.env.SINGLE_UI_DIR || path.join(HERE, '../../../tetrasinglemanagement/tetra-single-ui'));
+const UI_DIR = path.resolve(process.env.SINGLE_UI_DIR || path.join(HERE, '../../.upstream/single/tetra-single-ui'));
 const API_SRC = path.resolve(UI_DIR, '../tetra-single-api/src');
 const MOCK_DIR = path.join(UI_DIR, 'mock');
 const OUT_DIR = path.resolve(process.env.SINGLE_OUT_DIR || path.join(HERE, '../../site/single'));

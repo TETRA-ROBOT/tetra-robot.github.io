@@ -1,0 +1,92 @@
+# 싱글관제·멀티관제 원본이 바뀌었으면 데모를 다시 빌드하고, 확인 시험을 통과하면 커밋한 뒤 배포한다.
+# 확인 시험이 실패하면 커밋하지 않으므로 사이트는 마지막으로 잘 되던 판에 머문다 (실패 알림 메일·화면 캡처가 남음).
+#
+# 필요한 비밀값: UPSTREAM_TOKEN
+#   두 원본 저장소(TetraSingleManagement, TetraFleetManagement)의 Contents 읽기 권한만 있는 fine-grained 토큰.
+#   저장소 Settings → Secrets and variables → Actions 에 넣는다. 없으면 이 워크플로는 아무것도 하지 않는다.
+name: Update demos
+on:
+  schedule:
+    - cron: '17 21 * * *' # 매일 06:17 (한국 시각)
+  workflow_dispatch:
+    inputs:
+      only:
+        description: '한쪽만 (single 또는 fleet, 비우면 둘 다)'
+        required: false
+        default: ''
+      ref:
+        description: '이번만 쓸 원본 판 (예: v26.11.2, main). 비우면 demos/sources.json'
+        required: false
+        default: ''
+  repository_dispatch:
+    types: [upstream-updated] # 원본 저장소가 배포판을 낼 때 부르면 바로 갱신된다 (선택)
+permissions:
+  contents: write
+concurrency:
+  group: update-demos
+  cancel-in-progress: false
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
+    env:
+      UPSTREAM_TOKEN: ${{ secrets.UPSTREAM_TOKEN }}
+    steps:
+      - name: 토큰 확인
+        id: token
+        run: |
+          if [ -z "$UPSTREAM_TOKEN" ]; then
+            echo "::warning::UPSTREAM_TOKEN 비밀값이 없어 데모를 갱신하지 않습니다 (README 의 '자동 갱신' 참고)."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.token.outputs.ok == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.token.outputs.ok == 'true'
+        with:
+          node-version: 22
+      - name: 확인 시험 도구 설치 (Playwright)
+        if: steps.token.outputs.ok == 'true'
+        run: npm ci --no-audit --no-fund && npx playwright install --with-deps chromium
+      - name: 원본 받기 · 빌드 · 확인 시험
+        if: steps.token.outputs.ok == 'true'
+        env:
+          INPUT_ONLY: ${{ inputs.only }}
+          INPUT_REF: ${{ inputs.ref }}
+        run: |
+          args=(--if-changed)
+          [ -n "$INPUT_ONLY" ] && args+=(--only "$INPUT_ONLY")
+          [ -n "$INPUT_REF" ] && args=(--ref "$INPUT_REF" ${INPUT_ONLY:+--only "$INPUT_ONLY"})
+          bash scripts/update_demos.sh "${args[@]}"
+      - name: 실패하면 화면 캡처 남기기
+        if: failure() && steps.token.outputs.ok == 'true'
+        run: node scripts/smoke_test.cjs --shots smoke-shots || true
+      - uses: actions/upload-artifact@v4
+        if: failure() && steps.token.outputs.ok == 'true'
+        with:
+          name: smoke-shots
+          path: smoke-shots
+      - name: 커밋
+        id: commit
+        if: steps.token.outputs.ok == 'true'
+        run: |
+          git add -A site demos/sources.lock.json
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"; echo "바뀐 것이 없습니다."; exit 0
+          fi
+          summary="$(python3 -c "import json;d=json.load(open('demos/sources.lock.json'));print(', '.join(f'{k} {v[\"ref\"]} ({v[\"commit\"][:7]})' for k,v in d.items()))")"
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "데모 갱신: $summary"
+          git push origin HEAD:main
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+  deploy:
+    needs: update
+    if: needs.update.outputs.changed == 'true'
+    uses: ./.github/workflows/pages.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write

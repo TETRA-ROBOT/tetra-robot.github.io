@@ -110,6 +110,7 @@ h2 { font-size: clamp(26px, 3.4vw, 38px); margin: 8px 0 12px; font-weight: 900; 
 .demo h3 { font-size: 24px; margin: 0; }
 .demo .repo { font: 500 13px "JetBrains Mono", monospace; color: var(--faint); }
 .demo ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 15px; }
+.demo .ver:not(:empty) { margin-left: 6px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
 .demo .go { margin-top: auto; font-weight: 700; color: var(--brand); }
 .note { margin-top: 22px; font-size: 14px; color: var(--faint); }
 
@@ -275,7 +276,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space
         <a class="demo" href="single/">
           <span class="tag">로봇 1대 · 싱글관제</span>
           <h3>tetra_integration</h3>
-          <span class="repo">TetraSingleManagement · tetra-single-ui</span>
+          <span class="repo">TetraSingleManagement · tetra-single-ui <span class="ver" data-version="single"></span></span>
           <ul>
             <li>지도 위에서 실시간으로 움직이는 로봇 위치·배터리</li>
             <li>장소·태스크·반복 작업, 가상벽·속도 구역 편집</li>
@@ -286,7 +287,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space
         <a class="demo" href="fleet/">
           <span class="tag">로봇 여러 대 · 멀티관제</span>
           <h3>TetraFleetManagement</h3>
-          <span class="repo">tetra-fleet-ui</span>
+          <span class="repo">TetraFleetManagement · tetra-fleet-ui <span class="ver" data-version="fleet"></span></span>
           <ul>
             <li>여러 대의 가상 로봇이 지도 위를 오가며 미션 수행</li>
             <li>미션 보내기, 비상정지·운행 재개, 자동 충전, 알림</li>
@@ -307,6 +308,19 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space
   </div>
 </footer>
 
+<script>
+// 데모를 어느 판으로 빌드했는지 (scripts/update_demos.sh 가 쓰는 versions.json). 못 읽으면 표시하지 않는다
+fetch('versions.json').then(r => r.ok ? r.json() : {}).then(versions => {
+  document.querySelectorAll('[data-version]').forEach(el => {
+    const v = versions[el.dataset.version];
+    if (!v) return;
+    const release = /^v\d{2}\.\d{2}\.\d+$/.test(v.ref);
+    const date = (v.commit_date || '').slice(0, 10);
+    el.textContent = release ? v.ref : `${v.ref} · ${v.commit.slice(0, 7)}`;
+    el.title = `${release ? '배포판' : '개발판'} ${v.ref} (${v.commit.slice(0, 7)}, ${date}) 기준으로 빌드`;
+  });
+}).catch(() => {});
+</script>
 <script type="importmap">
 { "imports": {
   "three": "./assets/vendor/three.module.js"

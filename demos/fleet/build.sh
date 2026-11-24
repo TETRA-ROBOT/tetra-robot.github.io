@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # TETRA 멀티관제 화면(tetra-fleet-ui)을 가짜 서버와 함께 정적 데모로 빌드해 site/fleet 에 넣는다.
-#   FLEET_UI_DIR  원본 화면 폴더 (기본 /home/user/tetrafleetmanagement/tetra-fleet-ui)
+#   FLEET_UI_DIR  원본 화면 폴더 (기본: scripts/update_demos.sh 가 받아 둔 .upstream/fleet/tetra-fleet-ui)
 #   FLEET_API_DIR 원본 서버 폴더 (기본 $FLEET_UI_DIR/../tetra-fleet-api, lib/ 의 순수 로직을 쓴다)
 # 원본 폴더는 고치지 않는다 (node_modules 가 없으면 npm ci 만 한다). vue-tsc 는 건너뛴다.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
-FLEET_UI_DIR="${FLEET_UI_DIR:-/home/user/tetrafleetmanagement/tetra-fleet-ui}"
+FLEET_UI_DIR="${FLEET_UI_DIR:-$(cd "$HERE/../.." && pwd)/.upstream/fleet/tetra-fleet-ui}"
 export FLEET_UI_DIR
 export FLEET_OUT_DIR="${FLEET_OUT_DIR:-$(cd "$HERE/../.." && pwd)/site/fleet}"
 if [ ! -d "$FLEET_UI_DIR/src" ]; then

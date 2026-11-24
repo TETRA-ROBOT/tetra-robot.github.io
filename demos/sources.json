@@ -1,0 +1,13 @@
+{
+  "single": {
+    "repo": "https://github.com/TETRA-ROBOT/TetraSingleManagement",
+    "ref": "latest",
+    "ui_dir": "tetra-single-ui"
+  },
+  "fleet": {
+    "repo": "https://github.com/TETRA-ROBOT/TetraFleetManagement",
+    "ref": "main",
+    "ui_dir": "tetra-fleet-ui",
+    "note": "v26.11.1 배포판에는 데모가 쓰는 lib/sim-report 가 없어 main 을 따른다. 다음 배포판(v26.11.2 이후)이 나오면 \"latest\" 로 바꾼다."
+  }
+}

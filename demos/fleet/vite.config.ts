@@ -1,7 +1,7 @@
 /**
  * TETRA 멀티관제(tetra-fleet-ui) 정적 데모 빌드 설정.
  *
- * - 원본 화면 코드(FLEET_UI_DIR, 기본 ../tetrafleetmanagement/tetra-fleet-ui)는 고치지 않고 그대로 묶는다.
+ * - 원본 화면 코드(FLEET_UI_DIR, 기본 .upstream/fleet/tetra-fleet-ui)는 고치지 않고 그대로 묶는다.
  * - 진입점은 이 폴더의 index.html → demo-main.ts (가짜 서버를 먼저 깔고 원본 src/main.ts 를 불러온다).
  * - GitHub Pages 의 아무 하위 경로에서도 열리도록 base './' + 해시 주소(vue-router 감싸기).
  *
@@ -13,7 +13,7 @@ import { createRequire } from 'module';
 import { fileURLToPath, pathToFileURL } from 'url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const uiDir = path.resolve(process.env.FLEET_UI_DIR || '/home/user/tetrafleetmanagement/tetra-fleet-ui');
+const uiDir = path.resolve(process.env.FLEET_UI_DIR || path.join(here, '../../.upstream/fleet/tetra-fleet-ui'));
 const apiDir = path.resolve(process.env.FLEET_API_DIR || path.join(uiDir, '../tetra-fleet-api'));
 const outDir = path.resolve(process.env.FLEET_OUT_DIR || path.join(here, '../../site/fleet'));
 const uiRequire = createRequire(path.join(uiDir, 'package.json'));

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # TETRA 싱글 관제 UI 정적 데모를 site/single/ 로 빌드한다.
-#   SINGLE_UI_DIR  원본 UI 폴더 (기본: 이 스크립트 기준 ../../../tetrasinglemanagement/tetra-single-ui)
+#   SINGLE_UI_DIR  원본 UI 폴더 (기본: scripts/update_demos.sh 가 받아 둔 .upstream/single/tetra-single-ui)
 #   SINGLE_OUT_DIR 출력 폴더 (기본: ../../site/single)
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export SINGLE_UI_DIR="$(cd "${SINGLE_UI_DIR:-$HERE/../../../tetrasinglemanagement/tetra-single-ui}" && pwd)"
+export SINGLE_UI_DIR="$(cd "${SINGLE_UI_DIR:-$HERE/../../.upstream/single/tetra-single-ui}" && pwd)"
 export SINGLE_OUT_DIR="${SINGLE_OUT_DIR:-$HERE/../../site/single}"
 
 if [ ! -d "$SINGLE_UI_DIR/node_modules" ]; then

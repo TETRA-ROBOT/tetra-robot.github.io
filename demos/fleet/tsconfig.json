@@ -1,5 +1,5 @@
 {
-  "//": "데모 코드 타입 검사용 (빌드에는 쓰지 않음): ../../../tetrafleetmanagement/tetra-fleet-ui/node_modules/.bin/tsc -p demos/fleet",
+  "//": "데모 코드 타입 검사용 (빌드에는 쓰지 않음): ../../.upstream/fleet/tetra-fleet-ui/node_modules/.bin/tsc -p demos/fleet",
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
@@ -12,9 +12,9 @@
     "types": [],
     "baseUrl": ".",
     "paths": {
-      "@fleet-api/*": ["../../../tetrafleetmanagement/tetra-fleet-api/src/*"],
+      "@fleet-api/*": ["../../.upstream/fleet/tetra-fleet-api/src/*"],
       "@fleet-ui/*": ["./shims/fleet-ui.d.ts"],
-      "axios": ["../../../tetrafleetmanagement/tetra-fleet-ui/node_modules/axios/index.d.ts"]
+      "axios": ["../../.upstream/fleet/tetra-fleet-ui/node_modules/axios/index.d.ts"]
     }
   },
   "include": ["*.ts", "mock/*.ts", "shims/*.ts"],

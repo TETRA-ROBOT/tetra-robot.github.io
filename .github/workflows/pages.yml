@@ -1,10 +1,12 @@
 # site/ 폴더(랜딩 페이지 + 미리 빌드한 데모 2개)를 GitHub Pages 로 올린다.
-# 데모는 비공개 저장소의 화면 코드를 빌드한 결과라서, CI 에서 빌드하지 않고 scripts/build_all.sh 로 만든 결과를 커밋한다.
+# 데모 빌드 결과는 커밋해 둔다 (scripts/update_demos.sh 또는 update-demos.yml 이 만든다).
+# update-demos.yml 이 커밋한 뒤에는 이 워크플로를 workflow_call 로 부른다 (Actions 토큰으로 한 push 는 다른 워크플로를 깨우지 않으므로).
 name: Deploy Pages
 on:
   push:
     branches: [main]
   workflow_dispatch:
+  workflow_call:
 permissions:
   contents: read
   pages: write
@@ -20,6 +22,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main # workflow_call 때도 방금 커밋한 최신 main 을 올린다
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
