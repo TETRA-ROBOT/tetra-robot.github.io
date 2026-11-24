@@ -32,7 +32,8 @@ done
 git_up() {
   if [ -n "${UPSTREAM_TOKEN:-}" ]; then
     local basic; basic="$(printf 'x-access-token:%s' "$UPSTREAM_TOKEN" | base64 | tr -d '\n')"
-    git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $basic" "$@"
+    # 빈 값으로 먼저 비운다: actions/checkout 이 github.com 용 인증 헤더를 이미 넣어 두어 헤더가 둘이면 GitHub 가 400 으로 거절한다
+    git -c "http.https://github.com/.extraheader=" -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $basic" "$@"
   else
     git "$@"
   fi
