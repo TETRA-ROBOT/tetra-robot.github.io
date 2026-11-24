@@ -331,6 +331,9 @@ import * as THREE from 'three';
 import { STLLoader } from './assets/vendor/STLLoader.js';
 
 const MODELS = { m: ['TETRA-M', true], h: ['TETRA-H', true], edu: ['TETRA-EDU', false], mh: ['TETRA-MH', false], s: ['TETRA-S', true], sm: ['TETRA-SM', false] };
+// 몸통 색: 기본은 어두운 회색. 높이(m, 바닥 기준) 구간마다 다른 색을 칠할 수 있다 (M: 윗판 아래쪽 빨간 띠)
+const BODY = 0x3b4048, RED = 0xc8102e;
+const BANDS = { m: [[0.258, 0.318, RED]] };
 const host = document.getElementById('viewer');
 const fallback = document.getElementById('viewer-fallback');
 const nameEl = document.getElementById('model-name');
@@ -345,9 +348,10 @@ host.prepend(renderer.domElement);
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(32, 1, 0.01, 50);
-scene.add(new THREE.HemisphereLight(0xffffff, 0x404858, 1.6));
-const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(2, 3, 2); scene.add(key);
-const rim = new THREE.DirectionalLight(0xff8a7a, 1.2); rim.position.set(-2, 1.5, -2); scene.add(rim);
+// 어두운 몸통이 색을 타지 않게 중립광으로 (빨간 띠만 빨갛게 보이도록)
+scene.add(new THREE.HemisphereLight(0xffffff, 0x30343c, 2.0));
+const key = new THREE.DirectionalLight(0xffffff, 2.4); key.position.set(2, 3, 2); scene.add(key);
+const rim = new THREE.DirectionalLight(0xdfe6f0, 1.0); rim.position.set(-2, 1.5, -2); scene.add(rim);
 
 const floor = new THREE.Mesh(new THREE.CircleGeometry(1, 64), new THREE.MeshBasicMaterial({ color: 0xff5a52, transparent: true, opacity: 0.08 }));
 floor.rotation.x = -Math.PI / 2; scene.add(floor);
@@ -355,14 +359,32 @@ floor.rotation.x = -Math.PI / 2; scene.add(floor);
 const holder = new THREE.Group(); scene.add(holder);
 const loader = new STLLoader();
 const cache = new Map();
-const bodyMat = new THREE.MeshStandardMaterial({ color: 0xe9ecf2, metalness: 0.25, roughness: 0.45 });
-const wheelMat = new THREE.MeshStandardMaterial({ color: 0x2a2f3a, metalness: 0.1, roughness: 0.8 });
+// 양면: 가볍게 줄인 모델이라 구멍·뒤집힌 면이 있어, 한 면만 그리면 안쪽이 들여다보인다
+const bodyMat = new THREE.MeshStandardMaterial({ vertexColors: true, metalness: 0.2, roughness: 0.55, side: THREE.DoubleSide });
+const wheelMat = new THREE.MeshStandardMaterial({ color: 0x15171b, metalness: 0.1, roughness: 0.85, side: THREE.DoubleSide });
 
+/** 삼각형마다 높이(ROS z, 돌리기 전)로 색을 정한다. 띠는 옆면에만 칠한다 (윗면·아랫면은 몸통색) */
+function paint(g, bands) {
+  const pos = g.attributes.position, colors = new Float32Array(pos.count * 3);
+  const base = new THREE.Color(BODY), tmp = new THREE.Color();
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i += 3) {
+    a.fromBufferAttribute(pos, i); b.fromBufferAttribute(pos, i + 1); c.fromBufferAttribute(pos, i + 2);
+    const z = (a.z + b.z + c.z) / 3;
+    const n = b.sub(a).cross(c.sub(a)).normalize();
+    const side = Math.abs(n.z) < 0.5;
+    const band = side && bands.find(([lo, hi]) => z >= lo && z < hi);
+    const color = band ? tmp.set(band[2]) : base;
+    for (let j = 0; j < 3; j++) colors.set([color.r, color.g, color.b], (i + j) * 3);
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+}
 function prep(g) { g.rotateX(-Math.PI / 2); g.computeVertexNormals(); g.computeBoundingBox(); return g; }
 async function load(k) {
   if (!cache.has(k)) cache.set(k, (async () => {
     const base = `assets/models/tetra-${k}`;
     const [body, wheels] = await Promise.all([loader.loadAsync(`${base}-body.stl`), MODELS[k][1] ? loader.loadAsync(`${base}-wheels.stl`) : null]);
+    paint(body, BANDS[k] || []);
     return [prep(body), wheels && prep(wheels)];
   })());
   return cache.get(k);
@@ -397,11 +419,15 @@ host.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', (
   show(b.dataset.key);
 }));
 
-// drag to rotate
+// 끌어서 돌리기: 캔버스에서만 잡는다 (상자 전체를 잡으면 모델 버튼 클릭이 상자로 가 버림)
+const canvas = renderer.domElement;
 let dragging = false, lastX = 0, spin = 0.004;
-host.addEventListener('pointerdown', e => { dragging = true; lastX = e.clientX; host.setPointerCapture(e.pointerId); });
-host.addEventListener('pointermove', e => { if (dragging) { holder.rotation.y += (e.clientX - lastX) * 0.01; lastX = e.clientX; } });
-host.addEventListener('pointerup', () => { dragging = false; });
+canvas.style.touchAction = 'pan-y';
+canvas.addEventListener('pointerdown', e => { dragging = true; lastX = e.clientX; canvas.setPointerCapture(e.pointerId); });
+canvas.addEventListener('pointermove', e => { if (dragging) { holder.rotation.y += (e.clientX - lastX) * 0.01; lastX = e.clientX; } });
+const endDrag = () => { dragging = false; };
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
 
 renderer.setAnimationLoop(() => { if (!dragging && !reduceMotion) holder.rotation.y += spin; renderer.render(scene, camera); });
 show('m');
