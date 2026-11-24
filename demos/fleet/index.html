@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <link id="app-favicon" rel="icon" type="image/svg+xml" href="./favicon-dark.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#181820" />
+    <meta name="description" content="TETRA 멀티 로봇 관제 데모 — 서버 없이 브라우저 안에서 가상 로봇이 움직입니다." />
+    <title>TETRA Fleet Management · 데모</title>
+    <script>
+      (function() {
+        try {
+          var mode = 'dark';
+          var raw = localStorage.getItem('tetra-fleet-monitor');
+          if (raw) {
+            var parsed = JSON.parse(raw);
+            if (parsed && parsed.theme_mode) mode = parsed.theme_mode;
+          }
+          var resolved = mode;
+          if (mode === 'system') {
+            resolved = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+          }
+          document.documentElement.setAttribute('data-theme', resolved);
+          document.getElementById('app-favicon').setAttribute('href', './favicon-' + resolved + '.svg');
+        } catch(e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="./demo-main.ts"></script>
+  </body>
+</html>
